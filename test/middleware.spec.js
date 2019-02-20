@@ -1,9 +1,12 @@
-const { assert } = require('chai');
+const {assert} = require('chai');
 const sinon = require('sinon');
 const middleware = require('../lib/middleware');
 const polymerBuild = require('polymer-build');
 const fs = require('fs');
 const istanbulInstrumenter = require('istanbul-lib-instrument');
+
+const packageNamePrefix = '/components/@advanced-rest-client/wct-istanbub/';
+const packageName = '@advanced-rest-client/wct-istanbub';
 
 describe('Middleware', () => {
   afterEach(() => {
@@ -12,122 +15,138 @@ describe('Middleware', () => {
 
   describe('generic', () => {
     it('should by default exclude **/test/**', (done) => {
-      const server = middleware.middleware('', { include: ['**'], packageName: 'wct-istanbub' }, {
+      const server = middleware.middleware('', {include: ['**'], packageName}, {
         emit: (logLevel, title, message, value) => {
           assert.equal(message, 'skip      ');
-          assert.equal(value, '/components/wct-istanbub/test/fake.js');
+          assert.equal(value, packageNamePrefix + 'test/fake.js');
           done();
-        }, options: { clientOptions: { root: '/components/' } }
+        }, options: {clientOptions: {root: '/components/'}}
       });
-      server({ url: '/components/wct-istanbub/test/fake.js' }, {}, () => { });
+      server({url: packageNamePrefix + 'test/fake.js'}, {}, () => {});
     });
 
     it('should not instrument blacklisted requests', (done) => {
-      const server = middleware.middleware('', { include: ['**'], exclude: ['noinclude.js'], packageName: 'wct-istanbub' }, {
+      const server = middleware.middleware('', {
+        include: ['**'],
+        exclude: ['noinclude.js'],
+        packageName}, {
         emit: (logLevel, title, message, value) => {
           assert.equal(message, 'skip      ');
-          assert.equal(value, '/components/wct-istanbub/noinclude.js');
+          assert.equal(value, packageNamePrefix + 'noinclude.js');
           done();
-        }, options: { clientOptions: { root: '/components/' } }
+        }, options: {clientOptions: {root: '/components/'}}
       });
-      server({ url: '/components/wct-istanbub/noinclude.js' }, {}, () => { });
+      server({url: packageNamePrefix + 'noinclude.js'}, {}, () => {});
     });
 
     it('should not instrument non-whitelisted requests', (done) => {
-      const server = middleware.middleware('', { include: ['src/**'], packageName: 'wct-istanbub' }, {
+      const server = middleware.middleware('', {include: ['src/**'], packageName}, {
         emit: (logLevel, title, message, value) => {
           assert.equal(message, 'skip      ');
-          assert.equal(value, '/components/wct-istanbub/noinclude.js');
+          assert.equal(value, packageNamePrefix + 'noinclude.js');
           done();
-        }, options: { clientOptions: { root: '/components/' } }
+        }, options: {clientOptions: {root: '/components/'}}
       });
-      server({ url: '/components/wct-istanbub/noinclude.js' }, {}, () => { });
+      server({url: packageNamePrefix + 'noinclude.js'}, {}, () => {});
     });
 
     it('should not instrument a file if no whitelist is given', (done) => {
-      const server = middleware.middleware('', { packageName: 'wct-istanbub' }, {
+      const server = middleware.middleware('', {packageName}, {
         emit: (logLevel, title, message, value) => {
           assert.equal(message, 'skip      ');
-          assert.equal(value, '/components/wct-istanbub/include.js');
+          assert.equal(value, packageNamePrefix + 'include.js');
           done();
-        }, options: { clientOptions: { root: '/components/' } }
+        }, options: {clientOptions: {root: '/components/'}}
       });
-      server({ url: '/components/wct-istanbub/include.js' }, {}, () => { });
+      server({url: packageNamePrefix + 'include.js'}, {}, () => {});
     });
 
     it('should instrument whitelisted requests with a globbing pattern', (done) => {
-      const server = middleware.middleware('', { include: ['**'], packageName: 'wct-istanbub' }, {
+      const server = middleware.middleware('', {include: ['**'], packageName}, {
         emit: (logLevel, title, message, value) => {
           assert.equal(message, 'instrument');
-          assert.equal(value, '/components/wct-istanbub/include.js');
+          assert.equal(value, packageNamePrefix + 'include.js');
           done();
-        }, options: { clientOptions: { root: '/components/' } }
+        }, options: {clientOptions: {root: '/components/'}}
       });
-      server({ url: '/components/wct-istanbub/include.js' }, {}, () => { });
+      server({url: packageNamePrefix + 'include.js'}, {}, () => {});
     });
 
     it('should properly allow includes with / in the includes path', (done) => {
-      const server = middleware.middleware('', { include: ['/include.js'], packageName: 'wct-istanbub' }, {
+      const server = middleware.middleware('', {include: ['/include.js'], packageName}, {
         emit: (logLevel, title, message, value) => {
           assert.equal(message, 'instrument');
-          assert.equal(value, '/components/wct-istanbub/include.js');
+          assert.equal(value, packageNamePrefix + 'include.js');
           done();
-        }, options: { clientOptions: { root: '/components/' } }
+        }, options: {clientOptions: {root: '/components/'}}
       });
-      server({ url: '/components/wct-istanbub/include.js' }, {}, () => { });
+      server({url: packageNamePrefix + 'include.js'}, {}, () => {});
     });
 
     it('should properly allow includes without / in the includes path', (done) => {
-      const server = middleware.middleware('', { include: ['include.js'], packageName: 'wct-istanbub' }, {
+      const server = middleware.middleware('', {include: ['include.js'], packageName}, {
         emit: (logLevel, title, message, value) => {
           assert.equal(message, 'instrument');
-          assert.equal(value, '/components/wct-istanbub/include.js');
+          assert.equal(value, packageNamePrefix + 'include.js');
           done();
-        }, options: { clientOptions: { root: '/components/' } }
+        }, options: {clientOptions: {root: '/components/'}}
       });
-      server({ url: '/components/wct-istanbub/include.js' }, {}, () => { });
+      server({url: packageNamePrefix + 'include.js'}, {}, () => {});
     });
 
     it('should properly allow excludes with / in the excludes path', (done) => {
-      const server = middleware.middleware('', { include: ['**'], exclude: ['/noinclude.js'], packageName: 'wct-istanbub' }, {
+      const server = middleware.middleware('', {
+        include: ['**'],
+        exclude: ['/noinclude.js'],
+        packageName}, {
         emit: (logLevel, title, message, value) => {
           assert.equal(message, 'skip      ');
-          assert.equal(value, '/components/wct-istanbub/noinclude.js');
+          assert.equal(value, packageNamePrefix + 'noinclude.js');
           done();
-        }, options: { clientOptions: { root: '/components/' } }
+        }, options: {clientOptions: {root: '/components/'}}
       });
-      server({ url: '/components/wct-istanbub/noinclude.js' }, {}, () => { });
+      server({url: packageNamePrefix + 'noinclude.js'}, {}, () => {});
     });
 
     it('should properly allow excludes without / in the excludes path', (done) => {
-      const server = middleware.middleware('', { include: ['**'], exclude: ['noinclude.js'], packageName: 'wct-istanbub' }, {
+      const server = middleware.middleware('', {
+        include: ['**'],
+        exclude: ['noinclude.js'],
+        packageName}, {
         emit: (logLevel, title, message, value) => {
           assert.equal(message, 'skip      ');
-          assert.equal(value, '/components/wct-istanbub/noinclude.js');
+          assert.equal(value, packageNamePrefix + 'noinclude.js');
           done();
-        }, options: { clientOptions: { root: '/components/' } }
+        }, options: {clientOptions: {root: '/components/'}}
       });
-      server({ url: '/components/wct-istanbub/noinclude.js' }, {}, () => { });
+      server({url: packageNamePrefix + 'noinclude.js'}, {}, () => {});
     });
 
     it('should not add the basepath to includes & excludes if ignoreBasePath is set', (done) => {
-      const server = middleware.middleware('', { ignoreBasePath: true, include: ['/include.js'], exclude: ['noinclude.js'], packageName: 'wct-istanbub' }, {
+      const server = middleware.middleware('', {
+        ignoreBasePath: true,
+        include: ['/include.js'],
+        exclude: ['noinclude.js'],
+        packageName}, {
         emit: (logLevel, title, message, value) => {
           assert.equal(message, 'skip      ');
-          assert.equal(value, '/components/wct-istanbub/include.js');
+          assert.equal(value, packageNamePrefix + 'include.js');
           done();
-        }, options: { clientOptions: { root: '/components/' } }
+        }, options: {clientOptions: {root: '/components/'}}
       });
-      server({ url: '/components/wct-istanbub/include.js' }, {}, () => { });
+      server({url: packageNamePrefix + 'include.js'}, {}, () => {});
     });
 
     it('should not instrument a JSON and matches the includes', (done) => {
-      const server = middleware.middleware('', { include: ['test/mocks/bower.json'], exclude: [], packageName: 'wct-istanbub' }, {
-        emit: () => { },
-        options: { clientOptions: { root: '/components/' } }
+      const server = middleware.middleware('', {
+        include: ['test/mocks/bower.json'],
+        exclude: [],
+        packageName}, {
+        emit: () => {},
+        options: {clientOptions: {root: '/components/'}}
       });
-      server({ get: () => { }, url: '/components/wct-istanbub/test/mocks/bower.json' }, {
-        type: () => { }
+      server({get: () => {}, url: packageNamePrefix + 'test/mocks/bower.json'}, {
+        type: () => {}
       }, () => {
         done();
       });
@@ -137,15 +156,19 @@ describe('Middleware', () => {
       const createInstrumenter = sinon.stub(istanbulInstrumenter, 'createInstrumenter');
       createInstrumenter.callThrough();
 
-      const server = middleware.middleware('test/mocks', { npm: true, include: ['/include.js'] }, {
-        emit: () => { },
-        options: { clientOptions: { root: '/components/' } }
+      const server = middleware.middleware('test/mocks', {npm: true, include: ['/include.js']}, {
+        emit: () => {},
+        options: {clientOptions: {root: '/components/'}}
       });
+      let ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) ';
+      ua += 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36';
       server({
-        get: () => { return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36' },
-        url: '/components/wct-istanbub/include.js'
+        get: () => {
+          return ua;
+        },
+        url: packageNamePrefix + 'include.js'
       }, {
-          type: () => { },
+          type: () => {},
           send: () => {
             sinon.assert.calledOnce(createInstrumenter.withArgs(sinon.match({
               autoWrap: true,
@@ -169,22 +192,28 @@ describe('Middleware', () => {
             createInstrumenter.restore();
             done();
           }
-        }, () => { });
+        }, () => {});
     });
 
     it('should call createInstrument with unique set of plugins if duplicates are set', (done) => {
       const createInstrumenter = sinon.stub(istanbulInstrumenter, 'createInstrumenter');
       createInstrumenter.callThrough();
-
-      const server = middleware.middleware('test/mocks', { npm: true, include: ['/include.js'], babelPlugins: ['dotallRegex', 'flow', 'jsx'] }, {
-        emit: () => { },
-        options: { clientOptions: { root: '/components/' } }
+      const opts = {
+        npm: true, include: ['/include.js'], babelPlugins: ['dotallRegex', 'flow', 'jsx']
+      };
+      const server = middleware.middleware('test/mocks', opts, {
+        emit: () => {},
+        options: {clientOptions: {root: '/components/'}}
       });
       server({
-        get: () => { return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36' },
-        url: '/components/wct-istanbub/include.js'
+        get: () => {
+          let ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 ';
+          ua += '(KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36';
+          return ua;
+        },
+        url: packageNamePrefix + 'include.js'
       }, {
-          type: () => { },
+          type: () => {},
           send: () => {
             sinon.assert.calledOnce(createInstrumenter.withArgs(sinon.match({
               autoWrap: true,
@@ -209,7 +238,7 @@ describe('Middleware', () => {
             createInstrumenter.restore();
             done();
           }
-        }, () => { });
+        }, () => {});
     });
 
     it('should save the file in cache', (done) => {
@@ -224,33 +253,41 @@ describe('Middleware', () => {
       fsReadFileStub.withArgs('test/mocks/include.js').returns(mockFile);
       fsReadFileStub.callThrough();
 
-      const server = middleware.middleware('test/mocks', { npm: true, include: ['/include.js'] }, {
-        emit: () => { },
-        options: { clientOptions: { root: '/components/' } }
+      const server = middleware.middleware('test/mocks', {npm: true, include: ['/include.js']}, {
+        emit: () => {},
+        options: {clientOptions: {root: '/components/'}}
       });
       server({
-        get: () => { return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36' },
-        url: '/components/wct-istanbub/include.js'
+        get: () => {
+          let ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 ';
+          ua += '(KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36';
+          return ua;
+        },
+        url: packageNamePrefix + 'include.js'
       }, {
-          type: () => { },
+          type: () => {},
           send: () => {
             sinon.assert.calledOnce(fsExistStub);
             sinon.assert.calledOnce(fsReadFileStub.withArgs('test/mocks/include.js'));
           }
-        }, () => { });
+        }, () => {});
       server({
-        get: () => { return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36' },
-        url: '/components/wct-istanbub/include.js'
+        get: () => {
+          let ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 ';
+          ua += '(KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36';
+          return ua;
+        },
+        url: packageNamePrefix + 'include.js'
       }, {
-          type: () => { },
-          send: (response) => {
+          type: () => {},
+          send: () => {
             sinon.assert.calledTwice(fsExistStub);
             sinon.assert.calledOnce(fsReadFileStub.withArgs('test/mocks/include.js'));
             fsExistStub.restore();
             fsReadFileStub.restore();
             done();
           }
-        }, () => { });
+        }, () => {});
     });
   });
 
@@ -266,29 +303,30 @@ describe('Middleware', () => {
       });
 
       it('should use moduleResolution node if not set and options are npm', (done) => {
-        const server = middleware.middleware('', { npm: true, include: ['/include.js'] }, {
-          emit: () => { },
-          options: { clientOptions: { root: '/components/' } }
+        const server = middleware.middleware('', {npm: true, include: ['/include.js']}, {
+          emit: () => {},
+          options: {clientOptions: {root: '/components/'}}
         });
-        server({ get: () => { }, url: '/components/wct-istanbub/include.js' }, {
-          type: () => { }, send: (response) => {
-            assert.isTrue(polymerBuild.jsTransform.calledOnce);
-            assert.equal(polymerBuild.jsTransform.getCall(0).args[1].componentDir, 'node_modules');
-            assert.equal(polymerBuild.jsTransform.getCall(0).args[1].moduleResolution, 'node');
-            assert.isFalse(polymerBuild.jsTransform.getCall(0).args[1].isComponentRequest);
+        server({get: () => {}, url: packageNamePrefix + 'include.js'}, {
+          type: () => {}, send: () => {
+            assert.isTrue(jsTransformSpy.calledOnce);
+            assert.equal(jsTransformSpy.getCall(0).args[1].componentDir, 'node_modules');
+            assert.equal(jsTransformSpy.getCall(0).args[1].moduleResolution, 'node');
+            assert.isFalse(jsTransformSpy.getCall(0).args[1].isComponentRequest);
             jsTransformSpy.restore();
             done();
           }
-        }, () => { });
+        }, () => {});
       });
 
       it('should use moduleResolution node if set to node', (done) => {
-        const server = middleware.middleware('', { npm: false, include: ['/include.js'], moduleResolution: 'node' }, {
-          emit: () => { },
-          options: { clientOptions: { root: '/components/' } }
+        const server = middleware.middleware('', {npm: false, include: ['/include.js'], moduleResolution: 'node'}, {
+          emit: () => {},
+          options: {clientOptions: {root: '/components/'}}
         });
-        server({ get: () => { }, url: '/components/wct-istanbub/include.js' }, {
-          type: () => { }, send: (response) => {
+        // In this case the package name will be taken from `root` config property.
+        server({get: () => {}, url: '/components/wct-istanbub/include.js'}, {
+          type: () => {}, send: () => {
             assert.isTrue(polymerBuild.jsTransform.calledOnce);
             assert.equal(polymerBuild.jsTransform.getCall(0).args[1].componentDir, 'bower_components');
             assert.equal(polymerBuild.jsTransform.getCall(0).args[1].moduleResolution, 'node');
@@ -296,16 +334,17 @@ describe('Middleware', () => {
             jsTransformSpy.restore();
             done();
           }
-        }, () => { });
+        }, () => {});
       });
 
       it('should use moduleResolution none if not set and options are not npm', (done) => {
-        const server = middleware.middleware('', { npm: false, include: ['/include.js'] }, {
-          emit: () => { },
-          options: { clientOptions: { root: '/components/' } }
+        const server = middleware.middleware('', {npm: false, include: ['/include.js']}, {
+          emit: () => {},
+          options: {clientOptions: {root: '/components/'}}
         });
-        server({ get: () => { }, url: '/components/wct-istanbub/include.js' }, {
-          type: () => { }, send: (response) => {
+        // In this case the package name will be taken from `root` config property.
+        server({get: () => {}, url: '/components/wct-istanbub/include.js'}, {
+          type: () => {}, send: () => {
             assert.isTrue(polymerBuild.jsTransform.calledOnce);
             assert.equal(polymerBuild.jsTransform.getCall(0).args[1].componentDir, 'bower_components');
             assert.equal(polymerBuild.jsTransform.getCall(0).args[1].moduleResolution, 'none');
@@ -313,7 +352,7 @@ describe('Middleware', () => {
             jsTransformSpy.restore();
             done();
           }
-        }, () => { });
+        }, () => {});
       });
     });
 
@@ -328,15 +367,19 @@ describe('Middleware', () => {
       fsReadFileStub.withArgs('test/mocks/include.js').returns(mockFile);
       fsReadFileStub.callThrough();
 
-      const server = middleware.middleware('test/mocks', { npm: true, include: ['/include.js'] }, {
-        emit: () => { },
-        options: { clientOptions: { root: '/components/' } }
+      const server = middleware.middleware('test/mocks', {npm: true, include: ['/include.js']}, {
+        emit: () => {},
+        options: {clientOptions: {root: '/components/'}}
       });
       server({
-        get: () => { return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36' },
-        url: '/components/wct-istanbub/include.js'
+        get: () => {
+          let ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 ';
+          ua += '(KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36';
+          return ua;
+        },
+        url: packageNamePrefix + 'include.js'
       }, {
-          type: () => { },
+          type: () => {},
           send: (response) => {
             assert.include(response, 'cov_');
             assert.include(response, 'global.WCT.share.__coverage__');
@@ -344,19 +387,19 @@ describe('Middleware', () => {
             fsReadFileStub.restore();
             done();
           }
-        }, () => { });
+        }, () => {});
     });
   });
 
   describe('supporting Bower', () => {
     it('should call jsTransform with the correct parameters', (done) => {
       const jsTransformSpy = sinon.spy(polymerBuild, 'jsTransform');
-      const server = middleware.middleware('', { npm: false, include: ['/include.js'], packageName: 'wct-istanbub' }, {
-        emit: () => { },
-        options: { clientOptions: { root: '/components/' } }
+      const server = middleware.middleware('', {npm: false, include: ['/include.js'], packageName}, {
+        emit: () => {},
+        options: {clientOptions: {root: '/components/'}}
       });
-      server({ get: () => { }, url: '/components/wct-istanbub/include.js' }, {
-        type: () => { }, send: (response) => {
+      server({get: () => {}, url: packageNamePrefix + 'include.js'}, {
+        type: () => {}, send: () => {
           assert.isTrue(polymerBuild.jsTransform.calledOnce);
           assert.equal(polymerBuild.jsTransform.getCall(0).args[1].componentDir, 'bower_components');
           assert.equal(polymerBuild.jsTransform.getCall(0).args[1].moduleResolution, 'none');
@@ -364,7 +407,7 @@ describe('Middleware', () => {
           jsTransformSpy.restore();
           done();
         }
-      }, () => { });
+      }, () => {});
     });
 
     it('should instrument the file correctly', (done) => {
@@ -378,15 +421,19 @@ describe('Middleware', () => {
       fsReadFileStub.withArgs('/include.html').returns(mockFile);
       fsReadFileStub.callThrough();
 
-      const server = middleware.middleware('', { npm: false, include: ['/include.html'], packageName: 'wct-istanbub' }, {
-        emit: () => { },
-        options: { clientOptions: { root: '/components/' } }
+      const server = middleware.middleware('', {npm: false, include: ['/include.html'], packageName}, {
+        emit: () => {},
+        options: {clientOptions: {root: '/components/'}}
       });
       server({
-        get: () => { return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36' },
-        url: '/components/wct-istanbub/include.html'
+        get: () => {
+          let ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 ';
+          ua += '(KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36';
+          return ua;
+        },
+        url: packageNamePrefix + 'include.html'
       }, {
-          type: () => { },
+          type: () => {},
           send: (response) => {
             assert.include(response, 'cov_');
             assert.include(response, 'global.WCT.share.__coverage__');
@@ -394,22 +441,22 @@ describe('Middleware', () => {
             fsReadFileStub.restore();
             done();
           }
-        }, () => { });
+        }, () => {});
     });
 
     it('should call jsTransform with the correct parameters', (done) => {
       const jsTransformSpy = sinon.spy(polymerBuild, 'jsTransform');
-      const server = middleware.middleware('', { npm: false, include: ['/include.html'], packageName: 'wct-istanbub' }, {
-        emit: () => { },
-        options: { clientOptions: { root: '/components/' } }
+      const server = middleware.middleware('', {npm: false, include: ['/include.html'], packageName}, {
+        emit: () => {},
+        options: {clientOptions: {root: '/components/'}}
       });
-      server({ get: () => { }, url: '/components/wct-istanbub/include.html' }, {
-        type: () => { }, send: (response) => {
+      server({get: () => {}, url: packageNamePrefix + 'include.html'}, {
+        type: () => {}, send: () => {
           assert.isTrue(polymerBuild.jsTransform.notCalled);
           jsTransformSpy.restore();
           done();
         }
-      }, () => { });
+      }, () => {});
     });
   });
 
@@ -428,15 +475,19 @@ describe('Middleware', () => {
       fsReadFileStub.withArgs('test/mocks/mockMapped.js.map').returns(mockMapFile);
       fsReadFileStub.callThrough();
 
-      const server = middleware.middleware('test/mocks', { npm: true, include: ['/mockMapped.js'] }, {
-        emit: () => { },
-        options: { clientOptions: { root: '/components/' } }
+      const server = middleware.middleware('test/mocks', {npm: true, include: ['/mockMapped.js']}, {
+        emit: () => {},
+        options: {clientOptions: {root: '/components/'}}
       });
       server({
-        get: () => { return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36' },
-        url: '/components/wct-istanbub/mockMapped.js'
+        get: () => {
+          let ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 ';
+          ua += '(KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36';
+          return ua;
+        },
+        url: packageNamePrefix + 'mockMapped.js'
       }, {
-          type: () => { },
+          type: () => {},
           send: (response) => {
             assert.include(response, 'inputSourceMap: {');
             assert.include(response, 'mockMapped.ts');
@@ -444,7 +495,7 @@ describe('Middleware', () => {
             fsReadFileStub.restore();
             done();
           }
-        }, () => { });
+        }, () => {});
     });
 
     it('should not be loaded if map file does not exist', (done) => {
@@ -460,27 +511,30 @@ describe('Middleware', () => {
       fsReadFileStub.withArgs('test/mocks/mockMapped.js').returns(mockJsFile);
       fsReadFileStub.callThrough();
 
-      const server = middleware.middleware('test/mocks', { npm: true, include: ['/mockMapped.js'] }, {
-        emit: () => { },
-        options: { clientOptions: { root: '/components/' } }
+      const server = middleware.middleware('test/mocks', {npm: true, include: ['/mockMapped.js']}, {
+        emit: () => {},
+        options: {clientOptions: {root: '/components/'}}
       });
       server({
-        get: () => { return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36' },
-        url: '/components/wct-istanbub/mockMapped.js'
+        get: () => {
+          let ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 ';
+          ua += '(KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36';
+          return ua;
+        },
+        url: packageNamePrefix + 'mockMapped.js'
       }, {
-          type: () => { },
+          type: () => {},
           send: (response) => {
             assert.notInclude(response, 'inputSourceMap');
             fsExistStub.restore();
             fsReadFileStub.restore();
             done();
           }
-        }, () => { });
+        }, () => {});
     });
 
     it('should not be loaded if map file is invalid', (done) => {
       const mockJsFile = fs.readFileSync('test/mocks/mockMapped.js', 'utf8');
-
       // mock FS
       const fsExistStub = sinon.stub(fs, 'existsSync');
       fsExistStub.withArgs('test/mocks/mockMapped.js').returns(true);
@@ -489,25 +543,29 @@ describe('Middleware', () => {
 
       const fsReadFileStub = sinon.stub(fs, 'readFileSync');
       fsReadFileStub.withArgs('test/mocks/mockMapped.js').returns(mockJsFile);
-      fsReadFileStub.withArgs('test/mocks/mockMapped.js.map').returns("foo");
+      fsReadFileStub.withArgs('test/mocks/mockMapped.js.map').returns('foo');
       fsReadFileStub.callThrough();
 
-      const server = middleware.middleware('test/mocks', { npm: true, include: ['/mockMapped.js'] }, {
-        emit: () => { },
-        options: { clientOptions: { root: '/components/' } }
+      const server = middleware.middleware('test/mocks', {npm: true, include: ['/mockMapped.js']}, {
+        emit: () => {},
+        options: {clientOptions: {root: '/components/'}}
       });
       server({
-        get: () => { return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36' },
-        url: '/components/wct-istanbub/mockMapped.js'
+        get: () => {
+          let ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 ';
+          ua += '(KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36';
+          return ua;
+        },
+        url: packageNamePrefix + 'mockMapped.js'
       }, {
-          type: () => { },
+          type: () => {},
           send: (response) => {
             assert.notInclude(response, 'inputSourceMap');
             fsExistStub.restore();
             fsReadFileStub.restore();
             done();
           }
-        }, () => { });
+        }, () => {});
     });
-  })
+  });
 });

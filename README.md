@@ -1,4 +1,4 @@
-WCT-istanbub
+WCT-istanbub (fork for ARC & API components)
 =============================
 
 Istanbul coverage plugin for web-component-tester.
@@ -8,12 +8,14 @@ your project on each test run.
 
 In order to use this coverage plugin use at least version 6.4.0 of web-component-tester
 
-Check out this test repository for an [example](https://github.com/Bubbit/polymerTesting) with 'app' and [travis](https://travis-ci.org/Bubbit/polymerTesting) build  
+Check out this test repository for an [example](https://github.com/Bubbit/polymerTesting) with 'app' and [travis](https://travis-ci.org/Bubbit/polymerTesting) build
+
+This version has been adjusted to work with Polymer 3 components. As a difference to the original package it always adds `**/node_modules/**` to the ignored rules. Otherwise the test won't run at all.
 
 ## Installation
 
 ```sh
-npm install wct-istanbub --save-dev
+npm install @advanced-rest-client/wct-istanbub --save-dev
 ```
 
 ## Basic Usage
@@ -28,10 +30,12 @@ module.exports = {
     istanbub: {
       reporters: ["text-summary", "lcov"],
       include: [
-        "**/*.html"
+        "**/*.js"
       ],
       exclude: [
-        "**/test/**"
+        "**/test/**",
+        "**/demo/**",
+        "**/tasks/**"
       ]
     }
   }
@@ -82,7 +86,7 @@ Support for npm based on where to retrieve basic assets from `node_modules` inst
 
 Define support module import (node) or none, allowed values: `node` and `none`
 
-Defaults to `none if npm false` or `node if npm is true` 
+Defaults to `none if npm false` or `node if npm is true`
 
 ### isComponentRequestOverride
 
@@ -90,7 +94,7 @@ Override the componentRequest check
 
 ### babelPlugins
 
-Add babel plugins to default set: [`importMeta`, `asyncGenerators`, `dynamicImport`, `objectRestSpread`, `optionalCatchBinding`, `flow`, `jsx`], 
+Add babel plugins to default set: [`importMeta`, `asyncGenerators`, `dynamicImport`, `objectRestSpread`, `optionalCatchBinding`, `flow`, `jsx`],
 for example [`dotallRegex`]. Duplicates will be filtered out
 
 ## Coverage Thresholds
@@ -103,7 +107,7 @@ This requires specifying the `thresholds` option for the plugin
 
 ### writeOnlyOnSuccess `false`
 
-Set to `true` to write coverage only if all tests pass  
+Set to `true` to write coverage only if all tests pass
 
 ### Example
 
