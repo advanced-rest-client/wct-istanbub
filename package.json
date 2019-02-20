@@ -30,9 +30,9 @@
   ],
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Bubbit/wct-istanbub/issues"
+    "url": "https://github.com/advanced-rest-client/wct-istanbub/issues"
   },
-  "homepage": "https://github.com/Bubbit/wct-istanbub",
+  "homepage": "https://github.com/advanced-rest-client/wct-istanbub",
   "dependencies": {
     "convert-source-map": "^1.5.1",
     "express": "^4.16.2",
